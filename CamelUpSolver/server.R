@@ -33,8 +33,19 @@ shinyServer(function(input, output) {
     
     observeEvent(input$run, {
         # TODO Run simulation
-        cat("Running simulation")
+        withProgress({
+            Sys.sleep(5)
+        }, message="Running simulation")
         
+        # TODO Create binary matrix with camels and traps to indicate game state
+        
+        # Separate vector of booleans for dice rolled. Will use ints to refer to camels in C++
+        
+        # Pass these into cpp function and receive a 3x5 matrix with rows:
+            # Leg winning probabilities
+            # Overall winning probabilitiy
+            # Overall losing probability
+            # And columns given by camel
     })
     
     ########################### SIDE PANEL ####################################
