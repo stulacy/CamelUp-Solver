@@ -21,7 +21,7 @@ shinyUI(fluidPage(
        p("This is where the probabilities for various outputs will be displayed"),
        verbatimTextOutput("testout"),
        uiOutput("boardstate"),
-       uiOutput("probs")
+       tableOutput("probs")
     )
   )
 ))

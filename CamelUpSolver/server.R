@@ -1,7 +1,7 @@
 library(shiny)
 library(solver)
 
-NUM_SQUARES <- 14
+NUM_SQUARES <- 16
 CAMEL_COLOURS <- c('blue', 'white', 'orange', 'green', 'yellow')
 CAMELS <- paste('camel', CAMEL_COLOURS, sep='_')
 TRAPS <- paste('trap', c('forward', 'backward'), sep='_')
@@ -13,6 +13,8 @@ is_camel <- function(x) {
 is_trap <- function(x) {
     strsplit(x, "_")[[1]][1] == 'camel'
 }
+
+# TODO When add camel, don't change dropdown back to tile 1
         
 shinyServer(function(input, output) {
     
@@ -33,16 +35,25 @@ shinyServer(function(input, output) {
     })
     
     probs <- eventReactive(input$run, {
-        # TODO Run simulation
+        if (input$run < 1) return()
+        
+        # Game state is represented by binary matrix with 
+        # tiles on rows and camels and trips as cols
+        cols <- c(CAMELS, TRAPS)
+        gamestate <- matrix(FALSE, nrow=NUM_SQUARES, ncol=length(cols))
+        
+        for (i in seq(NUM_SQUARES)) {
+            tile_occupants <- tiles[[paste(i)]]
+            col_indices <- sapply(tile_occupants, function(occ) which(cols == occ))
+            if (length(col_indices) > 0)
+                gamestate[i, col_indices] <- seq_along(col_indices)
+        } 
+        
         withProgress({
-            Sys.sleep(5)
-            res <- solve()
+            Sys.sleep(2)
+            res <- solve(gamestate, CAMEL_COLOURS %in% input$rolleddice)
         }, message="Running simulation")
         res
-        
-        # TODO Create binary matrix with camels and traps to indicate game state
-        
-        # Separate vector of booleans for dice rolled. Will use ints to refer to camels in C++
         
         # Pass these into cpp function and receive a 3x5 matrix with rows:
             # Leg winning probabilities
@@ -126,7 +137,11 @@ shinyServer(function(input, output) {
         p("Some clever way of using DiagrammeR to draw the board out with the camels")
     })
     
-    output$probs <- renderUI({
-        probs()
+    output$probs <- renderTable({
+        res <- probs()
+        res <- data.frame(res)
+        res <- cbind(c("Leg Win %", "Overall Win %", "Overall Loss %"), res)
+        colnames(res) <- c('Outcome', CAMEL_COLOURS)
+        res
     })
 })
