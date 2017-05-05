@@ -5,23 +5,13 @@
 
 using namespace Rcpp;
 
-// rcpp_hello_world
-List rcpp_hello_world();
-RcppExport SEXP solver_rcpp_hello_world() {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    rcpp_result_gen = Rcpp::wrap(rcpp_hello_world());
-    return rcpp_result_gen;
-END_RCPP
-}
 // solve
-NumericMatrix solve(NumericMatrix boardstate, LogicalVector dice);
+NumericMatrix solve(IntegerMatrix boardstate, LogicalVector dice);
 RcppExport SEXP solver_solve(SEXP boardstateSEXP, SEXP diceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type boardstate(boardstateSEXP);
+    Rcpp::traits::input_parameter< IntegerMatrix >::type boardstate(boardstateSEXP);
     Rcpp::traits::input_parameter< LogicalVector >::type dice(diceSEXP);
     rcpp_result_gen = Rcpp::wrap(solve(boardstate, dice));
     return rcpp_result_gen;

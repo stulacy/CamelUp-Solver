@@ -1,9 +1,15 @@
 #include <Rcpp.h>
+#include "board.h"
 using namespace Rcpp;
 
 // [[Rcpp::export]]
-NumericMatrix solve(NumericMatrix boardstate, LogicalVector dice) {
-
+NumericMatrix solve(IntegerMatrix boardstate, LogicalVector dice) {
+    
+    Rcpp::Rcout << "Game state:\n" << boardstate << "\n";
+    Rcpp::Rcout << "Dice rolled: " << dice << "\n";
+    
+    Board board(boardstate);
+    
     // TODO Think about how to organise C++ code in terms of what objects are required (CamelStack, Trap)
     // TODO Make this more OO
     // One function at simulation level:
