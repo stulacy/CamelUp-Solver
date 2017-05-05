@@ -1,4 +1,5 @@
 library(shiny)
+library(solver)
 
 NUM_SQUARES <- 14
 CAMEL_COLOURS <- c('blue', 'white', 'orange', 'green', 'yellow')
@@ -31,11 +32,13 @@ shinyServer(function(input, output) {
         tiles[[paste(input$tile)]] <- c(tiles[[paste(input$tile)]], input$tileoccupant)
     })
     
-    observeEvent(input$run, {
+    probs <- eventReactive(input$run, {
         # TODO Run simulation
         withProgress({
             Sys.sleep(5)
+            res <- solve()
         }, message="Running simulation")
+        res
         
         # TODO Create binary matrix with camels and traps to indicate game state
         
@@ -49,6 +52,7 @@ shinyServer(function(input, output) {
     })
     
     ########################### SIDE PANEL ####################################
+    
     
     output$selecttile <- renderUI({
         if (is.null(tiles)) return()
@@ -123,6 +127,6 @@ shinyServer(function(input, output) {
     })
     
     output$probs <- renderUI({
-        p("Leg probabilities output from simulation")
+        probs()
     })
 })
