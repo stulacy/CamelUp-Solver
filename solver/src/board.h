@@ -4,10 +4,12 @@
 #include <vector>
 
 class Tile;
+class CamelStack;
 
 class Board {
     public:
-        Board(Rcpp::IntegerMatrix state, Rcpp::LogicalVector dice);
+        Board(Rcpp::IntegerMatrix state);
+        CamelStack getCamelStack(int);
         
     private:
         std::vector<Tile*> tiles;

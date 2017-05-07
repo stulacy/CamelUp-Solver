@@ -6,13 +6,13 @@
 using namespace Rcpp;
 
 // solve
-NumericMatrix solve(IntegerMatrix boardstate, LogicalVector dice);
+NumericMatrix solve(IntegerMatrix boardstate, IntegerVector dice);
 RcppExport SEXP solver_solve(SEXP boardstateSEXP, SEXP diceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerMatrix >::type boardstate(boardstateSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type dice(diceSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type dice(diceSEXP);
     rcpp_result_gen = Rcpp::wrap(solve(boardstate, dice));
     return rcpp_result_gen;
 END_RCPP
