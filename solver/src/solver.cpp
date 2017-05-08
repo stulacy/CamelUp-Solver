@@ -2,6 +2,7 @@
 #include <stack>
 #include <math.h>
 #include "board.h"
+#include <iostream>
 using namespace Rcpp;
 
 // wrapper around R's RNG such that we get a uniform distribution over
@@ -25,31 +26,54 @@ NumericMatrix solve(IntegerMatrix boardstate, IntegerVector dice) {
     // Shuffle dice
     IntegerVector shuff_dice;
     shuff_dice = shuffle(dice);
+    std::vector<int> camel_positions;
     Rcpp::Rcout << "Dice stack: " << shuff_dice << "\n";
     std::vector<int> dice_stack;
     dice_stack = Rcpp::as<std::vector<int> >(shuff_dice);
     
-    // TODO Get stack working as stack!
-    
     // Setup board with camel stacks 
-    Board board(boardstate);
-    int rolled_dice;
-    int roll;
+    for (int i=0; i < 5; ++i) {
+        for (int j=0; j < 16; ++j) {
+            if (boardstate(j, i) > 0) {
+                camel_positions.push_back(j);
+                continue;
+            }
+        }
+    }
     
-    // Main loop
-    // while dice_remaining:
+    for (auto it = camel_positions.begin(); it != camel_positions.end(); ++it) {
+        Rcpp::Rcout << "Camel is on tile: " << (*it) << "\n";
+    }
+    
+    Board board(boardstate);
+    int rolled_camel, roll, camel_position;
+    CamelStack* this_camel;
+    
+    // Debugging, can remove when finished
+    for (int i = 0; i < 16; ++i) {
+        Rcpp::Rcout << "Tile: " << i;
+        if (!board.getTile(i).isEmpty()) {
+            Rcpp::Rcout << " Occupant: " << board.getTile(i).getOccupant()->getName().c_str() << "\n";
+        } else {
+            Rcpp::Rcout << " is empty \n";
+        }
+    }
+    
     while (!dice_stack.empty()) {
-        // draw a dice
-        rolled_dice = dice_stack.back();
-        // cross off dice from vector
+        rolled_camel = dice_stack.back();
         dice_stack.pop_back();
-        Rcpp::Rcout << "Rolled dice: " << rolled_dice << "\n";
-        //   roll it
+        Rcpp::Rcout << "Rolled dice: " << rolled_camel << "\n";
         roll = ceil(R::runif(0, 1) * 3);
         Rcpp::Rcout << "Dice roll: " << roll << "\n";
         
-        //   obtain camelStack associated with this dice (board.getCamel())
-        //   runevent(camelStack, int, boardstate) (how to code this?)
+        // get camel tile id from camel_positions
+        Rcpp::Rcout << "This camel is currently on position: " << camel_positions[rolled_camel] << "\n";
+        
+        // obtain camelStack associated with this dice (board.getCamel())
+        //this_camel = board.getCamel(camel_positions[rolled_camel], rolled_camel);
+        
+        // runevent(camelStack, int, boardstate) (how to code this?)
+        
     }
     
     //

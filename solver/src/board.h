@@ -2,18 +2,20 @@
 #define BOARD_H 
 #include <Rcpp.h>
 #include <vector>
+#include "camelstack.h"
+#include "forwardtrap.h"
+#include "backwardtrap.h"
+#include "tile.h"
 
-class Tile;
-class CamelStack;
 
 class Board {
     public:
         Board(Rcpp::IntegerMatrix state);
-        CamelStack getCamelStack(int);
+        CamelStack* getCamel(int, int);
+        Tile getTile(int);
         
     private:
-        std::vector<Tile*> tiles;
-        std::vector<bool> dice;
+        std::vector<Tile> tiles;
 };
 
 #endif
