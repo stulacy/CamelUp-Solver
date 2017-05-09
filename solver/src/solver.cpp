@@ -60,18 +60,18 @@ NumericMatrix solve(IntegerMatrix boardstate, IntegerVector dice) {
     }
     
     while (!dice_stack.empty()) {
+        Rcpp::Rcout << "\n";
         rolled_camel = dice_stack.back();
         dice_stack.pop_back();
-        Rcpp::Rcout << "Rolled dice: " << rolled_camel << "\n";
-        roll = ceil(R::runif(0, 1) * 3);
-        Rcpp::Rcout << "Dice roll: " << roll << "\n";
-        
+        Rcpp::Rcout << "Dice colour : " << rolled_camel << "\n";
         // get camel tile id from camel_positions
         Rcpp::Rcout << "This camel is currently on position: " << camel_positions[rolled_camel] << "\n";
         
         // obtain camelStack associated with this dice (board.getCamel())
-        //this_camel = board.getCamel(camel_positions[rolled_camel], rolled_camel);
+        this_camel = board.getCamel(camel_positions[rolled_camel], rolled_camel);
         
+        roll = ceil(R::runif(0, 1) * 3);
+        Rcpp::Rcout << "Dice roll: " << roll << "\n";
         // runevent(camelStack, int, boardstate) (how to code this?)
         
     }

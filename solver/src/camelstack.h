@@ -6,7 +6,7 @@
 class CamelStack : public TileOccupant {
     public: 
         CamelStack(std::vector<int>);
-        std::vector<int> getCamels(void) const {return camels;};
+        std::vector<int>& getCamels(void) {return camels;};
         std::string getName();
     
     private:
