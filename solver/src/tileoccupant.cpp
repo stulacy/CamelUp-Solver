@@ -1,7 +1,7 @@
 #include "tileoccupant.h"
 
 
-TileOccupant::TileOccupant() {
+TileOccupant::TileOccupant(void) {
     
 }
 

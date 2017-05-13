@@ -14,3 +14,5 @@ dice <- c(1, 3, 4, 5) - 1
 
 set.seed(17)
 #solve(gamestate, dice)
+
+

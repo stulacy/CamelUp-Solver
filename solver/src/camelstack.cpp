@@ -6,3 +6,12 @@ std::string CamelStack::getName() {
     return "Camel stack";
 }
 
+int CamelStack::add_cam_stack(std::vector<int> new_cams) {
+    camels.insert( camels.end(), new_cams.begin(), new_cams.end() );
+    Rcpp::Rcout << "Just added new camels to camel stack, which now looks like: ";
+    for (auto i : camels) {
+        Rcpp::Rcout << i << ",";
+    }
+    Rcpp::Rcout << "\n";
+    return 0;
+}

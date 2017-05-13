@@ -12,10 +12,11 @@ class Board {
     public:
         Board(Rcpp::IntegerMatrix state);
         CamelStack* getCamel(int, int);
+        int move_camels(CamelStack*, int);
         Tile getTile(int);
         
     private:
-        std::vector<Tile> tiles;
+        std::deque<Tile> tiles;
 };
 
 #endif

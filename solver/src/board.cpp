@@ -3,15 +3,14 @@
 
 Board::Board(Rcpp::IntegerMatrix state) {
     for (int i=0; i < 16; ++i) {
-        Tile tile;
-        
+        Tile tile(i);
         // Could definitely refactor this
         // Find camel stacks
         std::vector<std::pair<int, int>> raw_camels;
         for (int j=0; j < 5; ++j) {
            if (state(i, j) > 0) {
                 raw_camels.emplace_back(state(i, j), j);
-                Rcpp::Rcout << "Found camel " << j << " in order " << state(i, j) << "\n";
+                //Rcpp::Rcout << "Found camel " << j << " in order " << state(i, j) << "\n";
             }
         }
         
@@ -35,12 +34,8 @@ Board::Board(Rcpp::IntegerMatrix state) {
         }
         
         tiles.push_back(tile);
-        Rcpp::Rcout << "Added tile to tiles. Now size " << tiles.size() << " \n";
+        //Rcpp::Rcout << "Added tile to tiles. Now size " << tiles.size() << " \n";
     }
-}
-
-Tile Board::getTile(int index) {
-    return tiles[index];
 }
 
 CamelStack* Board::getCamel(int tile_index, int camel_num) {
@@ -53,12 +48,17 @@ CamelStack* Board::getCamel(int tile_index, int camel_num) {
         std::copy(curr_camels.begin(), curr_camels.end(), new_camels.begin());
         
         int pos_in_stack, i;
-        auto it = curr_camels.begin();
         
+        // TODO Remove when done debugging
+        Rcpp::Rcout << "Retrieving camel " << camel_num << " from stack: ";
+        for (auto foo : curr_camels) {
+            Rcpp::Rcout << foo << ",";
+        }
+        Rcpp::Rcout << "\n";
+        
+        auto it = curr_camels.begin();
         for (i=0; it < curr_camels.end(); ++it, ++i) {
-            Rcpp::Rcout << "On iteration: " << i << "\n";
             if ((*it) == camel_num) {
-                Rcpp::Rcout << "Found camel looking for\n";
                 pos_in_stack = i;
                 break;
             }
@@ -67,8 +67,6 @@ CamelStack* Board::getCamel(int tile_index, int camel_num) {
         // If position is 0, then delete the entire camel stack, i.e. set this tile occupant to NULL
         if (pos_in_stack == 0) {
             Rcpp::Rcout << "At bottom of stack so am deleting entire TileOccupant \n";
-            // TODO What to put here?
-            //delete camstack;
             tile.setOccupant(nullptr);
         } else {
             // For original stack delete all values >= pos
@@ -77,16 +75,16 @@ CamelStack* Board::getCamel(int tile_index, int camel_num) {
             // For new stack go through new vector and delete all values < pos
             new_camels.erase(new_camels.begin(), new_camels.begin()+pos_in_stack);
             
-            Rcpp::Rcout << "Original stack: \n";
-            for (auto it = curr_camels.begin(); it < curr_camels.end(); ++it) {
-                Rcpp::Rcout << (*it) << ",";
+            Rcpp::Rcout << "Original stack: ";
+            for (auto it : curr_camels) {
+                Rcpp::Rcout << it << ",";
             }
             Rcpp::Rcout << "\n";
         }
         
-        Rcpp::Rcout << "New stack: \n";
-        for (auto it = new_camels.begin(); it < new_camels.end(); ++it) {
-            Rcpp::Rcout << (*it) << ",";
+        Rcpp::Rcout << "New stack: ";
+        for (auto it : new_camels) {
+            Rcpp::Rcout << it << ",";
         }
         Rcpp::Rcout << "\n";
         
@@ -97,4 +95,30 @@ CamelStack* Board::getCamel(int tile_index, int camel_num) {
         Rcpp::Rcerr << "Error: TileOccupant isn't coerced to CamelStack \n";
         return new CamelStack(std::vector<int>(2));
     }
+}
+
+int Board::move_camels(CamelStack* camel, int location) {
+    // Pass items into recursive function to add to camel stack, return the tile id
+    // of the tile on which it lands
+    
+    Rcpp::Rcout << "In board::move_camels to tile " << location << "\n";
+    
+    Tile* tile = &tiles[location];
+    Rcpp::Rcout << "board::move_camels BEFORE add_camel_stack. \ttile " << &tile << "\toccupant: " << tile->getOccupant() << "\tisEmpty(): " << tile->isEmpty() << "\n";
+    int tile_output = tile->add_camel_stack(camel);
+    Rcpp::Rcout << "board::move_camels AFTER add_camel_stack. \ttile " << &tile << "\toccupant: " << tile->getOccupant() << "\tisEmpty(): " << tile->isEmpty() << "\n";
+    
+    if (tile_output == 0) {
+        Rcpp::Rcout << "Tile output = 0 so am returning\n";
+        return location;
+    } else {
+        // TODO Add in functionality from backwards trap. Keep default arg to this function
+        // as False, and have if condition in here which sets to TRUE if tile_output == -1
+        Rcpp::Rcout << "Running recursive call with tile output " << tile_output << "\n";
+        return move_camels(camel, location + tile_output);
+    }
+}
+
+Tile Board::getTile(int i) {
+    return tiles[i];
 }

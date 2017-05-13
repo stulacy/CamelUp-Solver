@@ -1,18 +1,20 @@
 #ifndef TILE_H 
 #define TILE_H 
 
-class TileOccupant;
+#include "tileoccupant.h"
+#include "camelstack.h"
 
 class Tile {
     public:
-        Tile();
+        Tile(int);
         void setOccupant(TileOccupant*);
         TileOccupant* getOccupant(void);
         bool isEmpty(void);
+        int add_camel_stack(CamelStack*);
         
     private:
         TileOccupant* occupant;
-        
+        int id;
 };
 
 #endif

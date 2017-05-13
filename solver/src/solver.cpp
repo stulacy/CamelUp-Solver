@@ -46,59 +46,38 @@ NumericMatrix solve(IntegerMatrix boardstate, IntegerVector dice) {
     }
     
     Board board(boardstate);
-    int rolled_camel, roll, camel_position;
-    CamelStack* this_camel;
-    
-    // Debugging, can remove when finished
-    for (int i = 0; i < 16; ++i) {
-        Rcpp::Rcout << "Tile: " << i;
-        if (!board.getTile(i).isEmpty()) {
-            Rcpp::Rcout << " Occupant: " << board.getTile(i).getOccupant()->getName().c_str() << "\n";
-        } else {
-            Rcpp::Rcout << " is empty \n";
-        }
-    }
+    int rolled_camel, roll, camel_position, new_loc;
+    std::vector<int> new_camels;
+    CamelStack* this_camel; 
     
     while (!dice_stack.empty()) {
+        
         Rcpp::Rcout << "\n";
         rolled_camel = dice_stack.back();
         dice_stack.pop_back();
         Rcpp::Rcout << "Dice colour : " << rolled_camel << "\n";
         // get camel tile id from camel_positions
-        Rcpp::Rcout << "This camel is currently on position: " << camel_positions[rolled_camel] << "\n";
+        camel_position = camel_positions[rolled_camel];
+        Rcpp::Rcout << "This camel is currently on position: " << camel_position << "\n";
         
         // obtain camelStack associated with this dice (board.getCamel())
-        this_camel = board.getCamel(camel_positions[rolled_camel], rolled_camel);
+        this_camel = board.getCamel(camel_position, rolled_camel);
+        Rcpp::Rcout << "Retrieved camel stack which lives in: " << this_camel << "\n";
         
         roll = ceil(R::runif(0, 1) * 3);
         Rcpp::Rcout << "Dice roll: " << roll << "\n";
-        // runevent(camelStack, int, boardstate) (how to code this?)
+        Rcpp::Rcout << "solver BEFORE move.\toccupant: " << board.getTile(camel_position+roll).getOccupant() << "\n";
+        new_loc = board.move_camels(this_camel, camel_position + roll);
+        Rcpp::Rcout << "solver AFTER move.\toccupant: " << board.getTile(new_loc).getOccupant() << "\n";
+        new_camels = this_camel->getCamels();
+        
+        for (auto it = new_camels.begin(); it < new_camels.end(); ++it) {
+            Rcpp::Rcout << "Updating location for camel " << (*it) << " to " << new_loc << "\n";
+            camel_positions[(*it)] = new_loc;
+        }
         
     }
     
-    //
-    // runevent():
-    //   - backwards_trap = false
-    //   - find camelstack that contains this dice
-    //   - find index where camel is located
-    //   - if not at bottom of stack, then form new stack
-    //   - if forward trap on curr_position + dice:
-    //       - curr_position = curr_position + 1
-    //   - if backward trap on curr_position + dice:
-    //       - curr_position = curr_position - 1
-    //       - backwards_trap = true
-    //   - add_to_tile(this_stack, tile, backwards_trap)
-    
-    
-    // add_to_tile(stack, tile, backwards_trap):
-    //   - If no stack already on tile, just add to main data structure
-    //   - Else:
-    //       - If backwards_trap:
-    //           - Set new_stack below existing stack
-    //       - Else:
-    //           - Set new_stack on top of existing stack
-    //   - Add combined stack to tile
-     
     
     // for each camel calculate:
     //   - whether won leg
