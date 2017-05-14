@@ -1,32 +1,28 @@
 #include "tile.h"
 
-Tile::Tile(int id) : id(id), occupant(nullptr) {};
+Tile::Tile(int id, std::unique_ptr<TileOccupant> occ) : id(id), occupant(std::move(occ)) {}
+Tile::Tile(int id) : id(id) {}
 
 bool Tile::isEmpty(void) {
-    if (occupant == nullptr) {
-        return true;
-    } else {
-        return false;
-    }
+    return (occupant == nullptr);
 }
 
-void Tile::setOccupant(TileOccupant* occ) {
-    occupant = occ;
+void Tile::setOccupant(std::unique_ptr<TileOccupant> occ) {
+    occupant = std::move(occ);
 }
 
 TileOccupant* Tile::getOccupant(void) {
-    return occupant;
+    return occupant.get();
 }
 
-int Tile::add_camel_stack(CamelStack* cam, bool reverse) {
+int Tile::add_camel_stack(std::vector<int>camels, bool reverse) {
     int ret;
     if (isEmpty()) {
-        Rcpp::Rcout << "Empty tile so creating new stack\n";
-        occupant = dynamic_cast<TileOccupant*>(cam);
+        Rcpp::Rcout << "Adding camels to empty tile\n";
+        setOccupant(std::unique_ptr<TileOccupant>(new CamelStack(camels)));
         ret = 0;
     } else {
-        Rcpp::Rcout << "Tile has occupant so will add this camel stack to existing stack\n";
-        ret = occupant->add_cam_stack(cam->getCamels(), reverse);
+        ret = occupant->add_cam_stack(camels, reverse);
     } 
     return ret;
 }

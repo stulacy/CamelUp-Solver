@@ -3,18 +3,20 @@
 
 #include "tileoccupant.h"
 #include "camelstack.h"
+#include <memory>
 
 class Tile {
     public:
+        Tile(int, std::unique_ptr<TileOccupant>);
         Tile(int);
-        void setOccupant(TileOccupant*);
-        TileOccupant* getOccupant(void);
         bool isEmpty(void);
-        int add_camel_stack(CamelStack*, bool);
+        void setOccupant(std::unique_ptr<TileOccupant>);
+        TileOccupant* getOccupant(void);
+        int add_camel_stack(std::vector<int>, bool);
         
     private:
-        TileOccupant* occupant;
-        int id;
+        std::unique_ptr<TileOccupant> occupant;
+        const int id;
 };
 
 #endif

@@ -7,7 +7,12 @@ std::string CamelStack::getName() {
 }
 
 int CamelStack::add_cam_stack(std::vector<int> new_cams, bool reverse) {
-    Rcpp::Rcout << "In camelstack::add_stack. reverse = " << reverse << "\n";
+    Rcpp::Rcout << "Adding camels to existing camels: ";
+    for (auto i : camels) {
+        Rcpp::Rcout << i << ",";
+    }
+    Rcpp::Rcout << "\n";
+    
     if (reverse) {
         camels.insert( camels.begin(), new_cams.begin(), new_cams.end() );
     } else {
