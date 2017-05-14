@@ -18,20 +18,13 @@ Rcpp::IntegerVector shuffle(Rcpp::IntegerVector a) {
 }
 
 // [[Rcpp::export]]
-NumericMatrix solve(IntegerMatrix boardstate, IntegerVector dice) {
+NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice) {
     
     Rcpp::Rcout << "Game state:\n" << boardstate << "\n";
-    Rcpp::Rcout << "Dice rolled: " << dice << "\n";
-    
-    // Shuffle dice
-    IntegerVector shuff_dice;
-    shuff_dice = shuffle(dice);
-    std::vector<int> camel_positions;
-    Rcpp::Rcout << "Dice stack: " << shuff_dice << "\n";
-    std::vector<int> dice_stack;
-    dice_stack = Rcpp::as<std::vector<int> >(shuff_dice);
+    Rcpp::Rcout << "Dice rolled: " << input_dice << "\n";
     
     // Setup board with camel stacks 
+    std::vector<int> camel_positions;
     for (int i=0; i < 5; ++i) {
         for (int j=0; j < 16; ++j) {
             if (boardstate(j, i) > 0) {
@@ -49,34 +42,56 @@ NumericMatrix solve(IntegerMatrix boardstate, IntegerVector dice) {
     int rolled_camel, roll, camel_position, new_loc;
     std::vector<int> new_camels;
     CamelStack* this_camel; 
+    bool race_won = false;
+    int leg_num = 0;
+    IntegerVector shuff_dice;
+    std::vector<int> dice_stack;
     
-    while (!dice_stack.empty()) {
+    while (! race_won) {
         
-        Rcpp::Rcout << "\n";
-        rolled_camel = dice_stack.back();
-        dice_stack.pop_back();
-        Rcpp::Rcout << "Dice colour : " << rolled_camel << "\n";
-        // get camel tile id from camel_positions
-        camel_position = camel_positions[rolled_camel];
-        Rcpp::Rcout << "This camel is currently on position: " << camel_position << "\n";
-        
-        // obtain camelStack associated with this dice (board.getCamel())
-        this_camel = board.getCamel(camel_position, rolled_camel);
-        Rcpp::Rcout << "Retrieved camel stack which lives in: " << this_camel << "\n";
-        
-        roll = ceil(R::runif(0, 1) * 3);
-        Rcpp::Rcout << "Dice roll: " << roll << "\n";
-        Rcpp::Rcout << "solver BEFORE move.\toccupant: " << board.getTile(camel_position+roll).getOccupant() << "\n";
-        new_loc = board.move_camels(this_camel, camel_position + roll);
-        Rcpp::Rcout << "solver AFTER move.\toccupant: " << board.getTile(new_loc).getOccupant() << "\n";
-        new_camels = this_camel->getCamels();
-        
-        for (auto it = new_camels.begin(); it < new_camels.end(); ++it) {
-            Rcpp::Rcout << "Updating location for camel " << (*it) << " to " << new_loc << "\n";
-            camel_positions[(*it)] = new_loc;
+        // Shuffle dice
+        if (leg_num == 0) {
+            shuff_dice = shuffle(input_dice);
+        } else {
+            shuff_dice = shuffle(Rcpp::IntegerVector::create(0, 1, 2, 3, 4));
         }
+        Rcpp::Rcout << "Dice stack: " << shuff_dice << "\n";
+        dice_stack = Rcpp::as<std::vector<int> >(shuff_dice);
         
+        leg_num++;
+        
+        Rcpp::Rcout << "Leg number: " << leg_num << "\n";
+        
+        while (!dice_stack.empty()) {
+            Rcpp::Rcout << "\n";
+            rolled_camel = dice_stack.back();
+            dice_stack.pop_back();
+            Rcpp::Rcout << "Dice colour : " << rolled_camel << "\n";
+            // get camel tile id from camel_positions
+            camel_position = camel_positions[rolled_camel];
+            Rcpp::Rcout << "This camel is currently on position: " << camel_position << "\n";
+            
+            // obtain camelStack associated with this dice (board.getCamel())
+            this_camel = board.getCamel(camel_position, rolled_camel);
+            Rcpp::Rcout << "Retrieved camel stack which lives in: " << this_camel << "\n";
+            
+            roll = ceil(R::runif(0, 1) * 3);
+            Rcpp::Rcout << "Dice roll: " << roll << "\n";
+            new_loc = board.move_camels(this_camel, camel_position + roll);
+            
+            // Update position of camels
+            new_camels = this_camel->getCamels();
+            for (auto it = new_camels.begin(); it < new_camels.end(); ++it) {
+                Rcpp::Rcout << "Updating location for camel " << (*it) << " to " << new_loc << "\n";
+                camel_positions[(*it)] = new_loc;
+            }
+            
+            race_won = new_loc >= 16;
+            Rcpp::Rcout << "Race won: " << race_won << "\n";
+        }
     }
+    
+    Rcpp::Rcout << "Race has been won!\n";
     
     
     // for each camel calculate:
