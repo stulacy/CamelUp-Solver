@@ -10,7 +10,7 @@ class Tile {
         void setOccupant(TileOccupant*);
         TileOccupant* getOccupant(void);
         bool isEmpty(void);
-        int add_camel_stack(CamelStack*);
+        int add_camel_stack(CamelStack*, bool);
         
     private:
         TileOccupant* occupant;

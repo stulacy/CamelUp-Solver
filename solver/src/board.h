@@ -12,7 +12,7 @@ class Board {
     public:
         Board(Rcpp::IntegerMatrix state);
         CamelStack* getCamel(int, int);
-        int move_camels(CamelStack*, int);
+        int move_camels(CamelStack*, int, bool=false);
         Tile getTile(int);
         
     private:

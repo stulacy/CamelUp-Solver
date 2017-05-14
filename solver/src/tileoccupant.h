@@ -8,7 +8,7 @@ class TileOccupant {
     public: 
         TileOccupant(void);
         virtual std::string getName() = 0;
-        virtual int add_cam_stack(std::vector<int>) = 0;
+        virtual int add_cam_stack(std::vector<int>, bool) = 0;
 };
 
 #endif

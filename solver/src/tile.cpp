@@ -18,19 +18,15 @@ TileOccupant* Tile::getOccupant(void) {
     return occupant;
 }
 
-int Tile::add_camel_stack(CamelStack* cam) {
+int Tile::add_camel_stack(CamelStack* cam, bool reverse) {
     int ret;
-    TileOccupant* camel_pointer;
-    Rcpp::Rcout << "tile::add_camel_stack BEFORE\ttile " << this << "\toccupant: " << occupant << "\tisEmpty(): " << isEmpty() << "\n";
     if (isEmpty()) {
-        //setOccupant(dynamic_cast<TileOccupant*>(cam));
-        camel_pointer = dynamic_cast<TileOccupant*>(cam);
-        occupant = camel_pointer;
-        Rcpp::Rcout << "tile::add_camel_stack AFTER\ttile " << this << "\toccupant: " << occupant << "\tisEmpty(): " << isEmpty() << "\n";
+        Rcpp::Rcout << "Empty tile so creating new stack\n";
+        occupant = dynamic_cast<TileOccupant*>(cam);
         ret = 0;
     } else {
-        Rcpp::Rcout << "Tile has occupant so will add it\n";
-        ret = occupant->add_cam_stack(cam->getCamels());
+        Rcpp::Rcout << "Tile has occupant so will add this camel stack to existing stack\n";
+        ret = occupant->add_cam_stack(cam->getCamels(), reverse);
     } 
     return ret;
 }

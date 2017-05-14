@@ -97,16 +97,14 @@ CamelStack* Board::getCamel(int tile_index, int camel_num) {
     }
 }
 
-int Board::move_camels(CamelStack* camel, int location) {
+int Board::move_camels(CamelStack* camel, int location, bool reverse /* = false */) {
     // Pass items into recursive function to add to camel stack, return the tile id
     // of the tile on which it lands
     
     Rcpp::Rcout << "In board::move_camels to tile " << location << "\n";
     
     Tile* tile = &tiles[location];
-    Rcpp::Rcout << "board::move_camels BEFORE add_camel_stack. \ttile " << &tile << "\toccupant: " << tile->getOccupant() << "\tisEmpty(): " << tile->isEmpty() << "\n";
-    int tile_output = tile->add_camel_stack(camel);
-    Rcpp::Rcout << "board::move_camels AFTER add_camel_stack. \ttile " << &tile << "\toccupant: " << tile->getOccupant() << "\tisEmpty(): " << tile->isEmpty() << "\n";
+    int tile_output = tile->add_camel_stack(camel, reverse);
     
     if (tile_output == 0) {
         Rcpp::Rcout << "Tile output = 0 so am returning\n";
@@ -115,7 +113,7 @@ int Board::move_camels(CamelStack* camel, int location) {
         // TODO Add in functionality from backwards trap. Keep default arg to this function
         // as False, and have if condition in here which sets to TRUE if tile_output == -1
         Rcpp::Rcout << "Running recursive call with tile output " << tile_output << "\n";
-        return move_camels(camel, location + tile_output);
+        return move_camels(camel, location + tile_output, tile_output==-1);
     }
 }
 

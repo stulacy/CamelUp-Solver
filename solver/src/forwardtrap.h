@@ -7,7 +7,7 @@ class ForwardTrap : public TileOccupant {
     public: 
         ForwardTrap();
         std::string getName();
-        int add_cam_stack(std::vector<int>);
+        int add_cam_stack(std::vector<int>, bool);
 };
 
 #endif
