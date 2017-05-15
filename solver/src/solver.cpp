@@ -18,8 +18,8 @@ Rcpp::IntegerVector shuffle(Rcpp::IntegerVector a) {
 }
 
 void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerMatrix& results) {
-    Rcpp::Rcout << "Game state:\n" << boardstate << "\n";
-    Rcpp::Rcout << "Dice rolled: " << input_dice << "\n";
+    //Rcpp::Rcout << "Game state:\n" << boardstate << "\n";
+    //Rcpp::Rcout << "Dice rolled: " << input_dice << "\n";
     
     // Setup board with camel stacks 
     std::vector<int> camel_positions;
@@ -32,9 +32,9 @@ void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerM
         }
     }
     
-    for (auto it = camel_positions.begin(); it != camel_positions.end(); ++it) {
-        Rcpp::Rcout << "Camel is on tile: " << (*it) << "\n";
-    }
+    //for (auto it = camel_positions.begin(); it != camel_positions.end(); ++it) {
+    //    Rcpp::Rcout << "Camel is on tile: " << (*it) << "\n";
+    //}
     
     Board board(boardstate);
     bool race_won = false;
@@ -53,28 +53,28 @@ void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerM
         
         leg_num++;
         
-        Rcpp::Rcout << "\nLEG: " << leg_num << "\n";
-        Rcpp::Rcout << "Dice stack: " << shuff_dice << "\n";
+        //Rcpp::Rcout << "\nLEG: " << leg_num << "\n";
+        //Rcpp::Rcout << "Dice stack: " << shuff_dice << "\n";
         
         while (!dice_stack.empty()) {
-            Rcpp::Rcout << "\n";
+            //Rcpp::Rcout << "\n";
             int rolled_camel = dice_stack.back();
             dice_stack.pop_back();
-            Rcpp::Rcout << "Dice colour : " << rolled_camel << "\n";
+            //Rcpp::Rcout << "Dice colour : " << rolled_camel << "\n";
             // get camel tile id from camel_positions
             int camel_position = camel_positions[rolled_camel];
-            Rcpp::Rcout << "This camel is currently on position: " << camel_position << "\n";
+            //Rcpp::Rcout << "This camel is currently on position: " << camel_position << "\n";
             
             // obtain camelStack associated with this dice
             std::vector<int> new_camels = board.get_camelstack(camel_position, rolled_camel);
             
             int roll = ceil(R::runif(0, 1) * 3);
-            Rcpp::Rcout << "Dice roll: " << roll << "\n";
+            //Rcpp::Rcout << "Dice roll: " << roll << "\n";
             int new_loc = board.move_camels(new_camels, camel_position + roll);
             
             // Update position of camels
             for (auto it = new_camels.begin(); it < new_camels.end(); ++it) {
-                Rcpp::Rcout << "Updating location for camel " << (*it) << " to " << new_loc << "\n";
+                //Rcpp::Rcout << "Updating location for camel " << (*it) << " to " << new_loc << "\n";
                 camel_positions[(*it)] = new_loc;
             }
             
@@ -99,8 +99,8 @@ void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerM
     int loser = board.get_camel_from_stack(min_tile, false); 
     results(loser, 2)++;
     
-    Rcpp::Rcout << "Race has been won!\n";
-    Rcpp::Rcout << results;
+    //Rcpp::Rcout << "Race has been won!\n";
+    //Rcpp::Rcout << results;
     return;
 }
 
@@ -109,7 +109,7 @@ IntegerMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice, int num_
     
     IntegerMatrix results(5, 3);
     for (int i = 0; i < num_sims; i++) {
-        Rcpp::Rcout << "-----------------------------------------------\n ROUND: " << i << "\n--------------------------------------\n";
+        //Rcpp::Rcout << "-----------------------------------------------\n ROUND: " << i << "\n--------------------------------------\n";
         simulate_round(boardstate, input_dice, results);
     }
     

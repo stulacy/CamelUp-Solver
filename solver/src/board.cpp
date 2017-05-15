@@ -67,12 +67,11 @@ std::vector<int> Board::get_camelstack(int tile_index, int camel_num) {
         
         int pos_in_stack, i;
         
-        // TODO Remove when done debugging
-        Rcpp::Rcout << "Retrieving camel " << camel_num << " from stack: ";
-        for (auto foo : curr_camels) {
-            Rcpp::Rcout << foo << ",";
-        }
-        Rcpp::Rcout << "\n";
+        //Rcpp::Rcout << "Retrieving camel " << camel_num << " from stack: ";
+        //for (auto foo : curr_camels) {
+        //    Rcpp::Rcout << foo << ",";
+        //}
+        //Rcpp::Rcout << "\n";
         
         auto it = curr_camels.begin();
         for (i=0; it < curr_camels.end(); ++it, ++i) {
@@ -84,7 +83,7 @@ std::vector<int> Board::get_camelstack(int tile_index, int camel_num) {
         
         // If position is 0, then delete the entire camel stack, i.e. set this tile occupant to NULL
         if (pos_in_stack == 0) {
-            Rcpp::Rcout << "At bottom of stack so am deleting entire TileOccupant \n";
+            //Rcpp::Rcout << "At bottom of stack so am deleting entire TileOccupant \n";
             tile->setOccupant(nullptr);
         } else {
             // For original stack delete all values >= pos
@@ -93,18 +92,18 @@ std::vector<int> Board::get_camelstack(int tile_index, int camel_num) {
             // For new stack go through new vector and delete all values < pos
             new_camels.erase(new_camels.begin(), new_camels.begin()+pos_in_stack);
             
-            Rcpp::Rcout << "Original stack: ";
-            for (auto it : curr_camels) {
-                Rcpp::Rcout << it << ",";
-            }
-            Rcpp::Rcout << "\n";
+            //Rcpp::Rcout << "Original stack: ";
+            //for (auto it : curr_camels) {
+            //    Rcpp::Rcout << it << ",";
+            //}
+            //Rcpp::Rcout << "\n";
         }
         
-        Rcpp::Rcout << "New stack: ";
-        for (auto it : new_camels) {
-            Rcpp::Rcout << it << ",";
-        }
-        Rcpp::Rcout << "\n";
+        //Rcpp::Rcout << "New stack: ";
+        //for (auto it : new_camels) {
+        //    Rcpp::Rcout << it << ",";
+        //}
+        //Rcpp::Rcout << "\n";
         
         return new_camels;
     

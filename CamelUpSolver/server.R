@@ -2,9 +2,11 @@ library(shiny)
 library(solver)
 
 NUM_SQUARES <- 16
+MAX_POSSIBLE_SQUARE <- 18
 CAMEL_COLOURS <- c('blue', 'white', 'orange', 'green', 'yellow')
 CAMELS <- paste('camel', CAMEL_COLOURS, sep='_')
 TRAPS <- paste('trap', c('forward', 'backward'), sep='_')
+N_SIMS <- 1000
 
 is_camel <- function(x) {
     strsplit(x, "_")[[1]][1] == 'camel'
@@ -40,9 +42,9 @@ shinyServer(function(input, output) {
         # Game state is represented by binary matrix with 
         # tiles on rows and camels and trips as cols
         cols <- c(CAMELS, TRAPS)
-        gamestate <- matrix(FALSE, nrow=NUM_SQUARES, ncol=length(cols))
+        gamestate <- matrix(FALSE, nrow=MAX_POSSIBLE_SQUARE, ncol=length(cols))
         
-        for (i in seq(NUM_SQUARES)) {
+        for (i in seq(MAX_POSSIBLE_SQUARE)) {
             tile_occupants <- tiles[[paste(i)]]
             col_indices <- sapply(tile_occupants, function(occ) which(cols == occ))
             if (length(col_indices) > 0)
@@ -50,16 +52,9 @@ shinyServer(function(input, output) {
         } 
         
         withProgress({
-            Sys.sleep(2)
-            res <- solve(gamestate, CAMEL_COLOURS %in% input$rolleddice)
+            res <- solve(gamestate, which(!CAMEL_COLOURS %in% input$rolleddice)-1, N_SIMS)
+            res <- res / N_SIMS * 100
         }, message="Running simulation")
-        res
-        
-        # Pass these into cpp function and receive a 3x5 matrix with rows:
-            # Leg winning probabilities
-            # Overall winning probabilitiy
-            # Overall losing probability
-            # And columns given by camel
     })
     
     ########################### SIDE PANEL ####################################
@@ -140,8 +135,8 @@ shinyServer(function(input, output) {
     output$probs <- renderTable({
         res <- probs()
         res <- data.frame(res)
-        res <- cbind(c("Leg Win %", "Overall Win %", "Overall Loss %"), res)
-        colnames(res) <- c('Outcome', CAMEL_COLOURS)
+        res <- cbind(CAMEL_COLOURS, res)
+        colnames(res) <- c("Camel", "Leg Win %", "Overall Win %", "Overall Loss %")
         res
     })
 })
