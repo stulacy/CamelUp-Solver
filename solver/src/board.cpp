@@ -51,7 +51,7 @@ Board::Board(Rcpp::IntegerMatrix state) {
     }
 }
 
-std::vector<int> Board::getCamel(int tile_index, int camel_num) {
+std::vector<int> Board::get_camelstack(int tile_index, int camel_num) {
     Tile* tile = &tiles.at(tile_index);
     // TODO Don't want to gain ownership, just get reference to it
     // so can obtain camel values to start new CamelStack, so should
@@ -113,6 +113,22 @@ std::vector<int> Board::getCamel(int tile_index, int camel_num) {
         Rcpp::Rcerr << "Error: TileOccupant isn't coerced to CamelStack \n";
         return std::vector<int>(2);
     }
+}
+
+int Board::get_camel_from_stack(int tile_index, bool from_top /* = true */) {
+    Tile* tile = &tiles.at(tile_index);
+    TileOccupant* camstack = tile->getOccupant();
+    // TODO Shouldn't have to use this cast hack. Indicates design flaw
+    int camel_id;
+    if (dynamic_cast<CamelStack*>(camstack) != NULL) {
+        std::vector<int>& curr_camels = dynamic_cast<CamelStack*>(camstack)->getCamels();
+        camel_id = (from_top) ? curr_camels.back() : curr_camels.front();
+    } else {
+        Rcpp::Rcerr << "Can't find camel stack at index " << tile_index << ".\n";
+        camel_id = 0;
+    }
+    
+    return camel_id;
 }
 
 int Board::move_camels(std::vector<int> camels, int location, bool reverse /* = false */) {

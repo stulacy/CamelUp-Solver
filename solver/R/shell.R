@@ -13,6 +13,6 @@ gamestate[4, 7] <- 1
 dice <- c(1, 3, 4, 5) - 1
 
 set.seed(3)
-solve(gamestate, dice)
+solve(gamestate, dice, 100)
 
 

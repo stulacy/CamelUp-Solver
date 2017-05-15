@@ -17,9 +17,7 @@ Rcpp::IntegerVector shuffle(Rcpp::IntegerVector a) {
     return b;
 }
 
-// [[Rcpp::export]]
-NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice) {
-    
+void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerMatrix& results) {
     Rcpp::Rcout << "Game state:\n" << boardstate << "\n";
     Rcpp::Rcout << "Dice rolled: " << input_dice << "\n";
     
@@ -51,12 +49,12 @@ NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice) {
         } else {
             shuff_dice = shuffle(Rcpp::IntegerVector::create(0, 1, 2, 3, 4));
         }
-        Rcpp::Rcout << "Dice stack: " << shuff_dice << "\n";
         std::vector<int> dice_stack = Rcpp::as<std::vector<int> >(shuff_dice);
         
         leg_num++;
         
-        Rcpp::Rcout << "Leg number: " << leg_num << "\n";
+        Rcpp::Rcout << "\nLEG: " << leg_num << "\n";
+        Rcpp::Rcout << "Dice stack: " << shuff_dice << "\n";
         
         while (!dice_stack.empty()) {
             Rcpp::Rcout << "\n";
@@ -68,8 +66,7 @@ NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice) {
             Rcpp::Rcout << "This camel is currently on position: " << camel_position << "\n";
             
             // obtain camelStack associated with this dice
-            std::vector<int> new_camels = board.getCamel(camel_position, rolled_camel);
-            //Rcpp::Rcout << "Retrieved camel stack which lives in: " << this_camel.get() << "\n";
+            std::vector<int> new_camels = board.get_camelstack(camel_position, rolled_camel);
             
             int roll = ceil(R::runif(0, 1) * 3);
             Rcpp::Rcout << "Dice roll: " << roll << "\n";
@@ -86,20 +83,35 @@ NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice) {
                 break;
             }
         }
+        
+        if (leg_num == 1) {
+            int max_tile =*std::max_element(camel_positions.begin(), camel_positions.end());
+            int leg_winner = board.get_camel_from_stack(max_tile); 
+            results(leg_winner, 0)++;
+        }
+            
     }
     
+    int max_tile =*std::max_element(camel_positions.begin(), camel_positions.end());
+    int winner = board.get_camel_from_stack(max_tile); 
+    results(winner, 1)++;
+    int min_tile =*std::min_element(camel_positions.begin(), camel_positions.end());
+    int loser = board.get_camel_from_stack(min_tile, false); 
+    results(loser, 2)++;
+    
     Rcpp::Rcout << "Race has been won!\n";
-    
-    
-    // Output matrix with 5 rows (camels) and 3 columns for:
-    //   - whether won first leg
-    //   - whether won race
-    //   - whether race was won and in last place
-    
-    NumericMatrix out(3, 5);
-    out(0, 2) = 5.2;
-    out(1, 3) = 4.3;
-    out(2, 0) = 3.6;
+    Rcpp::Rcout << results;
+    return;
+}
 
-    return out;
+// [[Rcpp::export]]
+IntegerMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice, int num_sims) {
+    
+    IntegerMatrix results(5, 3);
+    for (int i = 0; i < num_sims; i++) {
+        Rcpp::Rcout << "-----------------------------------------------\n ROUND: " << i << "\n--------------------------------------\n";
+        simulate_round(boardstate, input_dice, results);
+    }
+    
+    return results;
 }

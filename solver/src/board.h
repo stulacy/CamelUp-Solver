@@ -11,8 +11,9 @@
 class Board {
     public:
         Board(Rcpp::IntegerMatrix state);
-        std::vector<int> getCamel(int, int);
+        std::vector<int> get_camelstack(int, int);
         int move_camels(std::vector<int>, int, bool=false);
+        int get_camel_from_stack(int, bool=true);
         
     private:
         std::deque<Tile> tiles;
