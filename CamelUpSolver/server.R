@@ -4,21 +4,29 @@ library(solver)
 NUM_SQUARES <- 16
 MAX_POSSIBLE_SQUARE <- 18
 CAMEL_COLOURS <- c('blue', 'white', 'orange', 'green', 'yellow')
-CAMELS <- paste('camel', CAMEL_COLOURS, sep='_')
-TRAPS <- paste('trap', c('forward', 'backward'), sep='_')
+CAMELS <- paste(CAMEL_COLOURS, 'camel', sep='_')
+TRAPS <- paste(c('forward', 'backward'), 'trap', sep='_')
 N_SIMS <- 1000
 
 is_camel <- function(x) {
-    strsplit(x, "_")[[1]][1] == 'camel'
+    !is.null(x) && strsplit(x, "_")[[1]][2] == 'camel'
 }
 
 is_trap <- function(x) {
-    strsplit(x, "_")[[1]][1] == 'camel'
+    !is.null(x) && strsplit(x, "_")[[1]][2] == 'trap'
+}
+
+
+neaten_str <- function(raw) {
+    # Neatens a string of form 'descriptor_type' to 'Descriptor type'
+    splt <- strsplit(raw, '_')[[1]]
+    paste(paste0(toupper(substring(splt[1], 1, 1)), 
+                 substring(splt[1], 2)), splt[2])
 }
 
 # TODO When add camel, don't change dropdown back to tile 1
         
-shinyServer(function(input, output) {
+shinyServer(function(input, output, session) {
     
     ########################### LOGIC ####################################
     # Setup tiles with nothing on
@@ -30,10 +38,50 @@ shinyServer(function(input, output) {
         tiles[[paste(i)]] <- NULL
     }
     
+    unplaced_camels <- reactive({
+        tile_occupants <- unlist(reactiveValuesToList(tiles))
+        placed_camels <- tile_occupants[sapply(tile_occupants, is_camel)]
+        setdiff(CAMELS, placed_camels)
+    })
+    
+    free_tiles <- reactive({
+        tile_occupants <- reactiveValuesToList(tiles)
+        placed_traps <- names(tile_occupants)[!sapply(tile_occupants, is_trap)]
+    })
+  
+    
     observeEvent(input$addoccupant, {
         if (input$addoccupant < 1) return()
         
         tiles[[paste(input$tile)]] <- c(tiles[[paste(input$tile)]], input$tileoccupant)
+        
+        # TODO Add code to remove tile with traps on from dropdown
+        #observeEvent(input$tile{
+        #    in_tile <- input$tile
+        #    if (is.null(reactiveValuesToList(tiles))) return()
+        #    if (is.null(in_tile)) return()
+        #    
+        #    freetiles <- free_tiles()
+        #    
+        #    # If on square with trap then update list of available tiles to
+        #    # include those without tiles on.
+        #    if (!in_tile %in% freetiles) {
+        #        updateSelectInput(session, "tile", selected=min(as.numeric(freetiles)), 
+        #                          choices=sort(as.numeric(freetiles)))
+        #    } else {
+        #        # Else, obtain list of possible values and update tile occupants accordingly
+        #        # If don't have camel on square then can add trap too 
+        #        
+        #        # TODO Does this need to be an else, or can it just be a separate
+        #        # value from the if?
+        #        possible_items <- unplaced_camels()
+        #        if (is.null(tiles[[paste(in_tile)]])) {
+        #            possible_items <- c(possible_items, TRAPS)
+        #        }
+        #        updateSelectInput(session, "tileoccupant", 
+        #                          choices=setNames(possible_items, sapply(possible_items, neaten_str)))
+        #    }
+        #})
     })
     
     probs <- eventReactive(input$run, {
@@ -61,61 +109,48 @@ shinyServer(function(input, output) {
     
     
     output$selecttile <- renderUI({
-        if (is.null(tiles)) return()
+        selectInput("tile", "Add item to tile...", choices=seq(NUM_SQUARES))
+    })
+    
+    # When change tile, update list to display appropriate options
+    observe({
+        in_tile <- input$tile
+        if (is.null(reactiveValuesToList(tiles))) return()
+        if (is.null(in_tile)) return()
         
-        tiles_l <- reactiveValuesToList(tiles)
-        tiles_ord <- tiles_l[paste(seq(NUM_SQUARES))]
-        # Can add values to any tile that doesn't have a trap on it already
-        non_trap_tiles <- tiles_ord[sapply(tiles_ord, function(x) {
-            is.null(x) || is_trap(x)
+        # Else, obtain list of possible values and update tile occupants accordingly
+        # If don't have camel on square then can add trap too 
+        if (is_trap(tiles[[paste(in_tile)]])) {
+            freetiles <- free_tiles()
+            updateSelectInput(session, "tile", selected=min(as.numeric(freetiles)), 
+                              choices=sort(as.numeric(freetiles)))
+        } else {
+            possible_items <- unplaced_camels()
+            if (is.null(tiles[[paste(in_tile)]])) {
+                possible_items <- c(possible_items, TRAPS)
             }
-        )]
-        
-        selectInput("tile", "Add item to tile...", choices=names(non_trap_tiles))
+            updateSelectInput(session, "tileoccupant", 
+                              choices=setNames(possible_items, sapply(possible_items, neaten_str)))
+                
+        }
+    })
+    
+    output$selectoccupant <- renderUI({
+        options <- c(CAMELS, TRAPS)
+        selectInput("tileoccupant", "Occupant", setNames(options,
+                                                         sapply(options, neaten_str)))
     })
     
     output$addoccupant <- renderUI({
-        in_tile <- input$tile
-        if (is.null(in_tile)) return()
-        
-        possible_items <- unplaced_camels()
-        
-        # If don't have camel on square then can add trap too 
-        if (is.null(tiles[[paste(in_tile)]])) {
-            possible_items <- c(possible_items, TRAPS)
-        }
-        
-        if (length(possible_items) == 0) {
-            p("Unable to place any further items on this tile.")
-        } else {
-            item_list <- list(
-                selectInput("tileoccupant", "Occupant", possible_items),
-                actionButton("addoccupant", "Add")
-            )
-            do.call(tagList, item_list)
-        }
+        if (is.null(input$tileoccupant) || input$tileoccupant == '') return()
+        actionButton("addoccupant", "Add")
     })
     
     output$rolleddice <- renderUI({
-        checkboxGroupInput("rolleddice", "Select dices that have already been rolled", 
+        checkboxGroupInput("rolleddice", "Select dice that have already been rolled", 
                            choices=CAMEL_COLOURS)
     })
     
-    # Returns names of camels that have been placed.
-    # TODO Should this be a function or reactive?
-    placed_camels <- reactive({
-        tile_occupants <- unlist(reactiveValuesToList(tiles))
-        placed_camels <- tile_occupants[sapply(tile_occupants, is_camel)]
-    })
-    
-    # Returns names of camels that haven't yet been placed.
-    # TODO Should this be a function or reactive?
-    unplaced_camels <- reactive({
-        tile_occupants <- unlist(reactiveValuesToList(tiles))
-        placed_camels <- tile_occupants[sapply(tile_occupants, is_camel)]
-        setdiff(CAMELS, placed_camels)
-    })
-  
     output$runbutton <- renderUI({
         if (length(unplaced_camels()) > 0) return()
         
