@@ -18,10 +18,9 @@ shinyUI(fluidPage(
     ),
     
     mainPanel(
-       h3("Outputs"),
-       p("This is where the probabilities for various outputs will be displayed"),
+       h3("Game board"),
+       grVizOutput("boardstate"),
        verbatimTextOutput("testout"),
-       uiOutput("boardstate"),
        tableOutput("probs")
     )
   )
