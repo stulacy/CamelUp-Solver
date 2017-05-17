@@ -9,12 +9,9 @@ CAMELS <- paste(CAMEL_COLOURS, 'camel', sep='_')
 TRAPS <- paste(c('forward', 'backward'), 'trap', sep='_')
 N_SIMS <- 1000
 
-# TODO display fonts more cleanly
-# TODO handle white camel = beige background?
 # TODO Don't resize whole diagram when change colour
 # TODO Have stripes running vertically
-# TODO More appropriate forward trap colour
-# TODO Key with trap colour somewhere
+# TODO Add reset button
 
 is_camel <- function(x) {
     !is.null(x) && strsplit(x, "_")[[1]][2] == 'camel'
@@ -28,13 +25,14 @@ raw_diagram <- "
 digraph 'camelup'
 {
     graph [pad='0.75', ranksep='0.25', nodesep='0.25'];
-    node [fontname='FreeSans',fontsize=20,shape=square, width=2, height=2, style=striped, fillcolor=white, gradientangle=90];
+    node [fontname='FreeSans',fontsize='50',fixedsize=true,shape=square, width=3, height=3, style=striped, fillcolor=khaki1];
     edge [style=invis];
     
     rankdir = 'TB';
     
     subgraph cluster_top {
         style=invis;
+        weight=1;
         {
             rank='same';
             Node_15 [label='@@15', fillcolor='@@31'];
@@ -162,14 +160,20 @@ shinyServer(function(input, output, session) {
         
         # Else, obtain list of possible values and update tile occupants accordingly
         # If don't have camel on square then can add trap too 
-        if (is_trap(tiles[[paste(in_tile)]])) {
+        if (is_trap(tiles[[in_tile]])) {
             freetiles <- free_tiles()
             updateSelectInput(session, "tile", selected=min(as.numeric(freetiles)), 
                               choices=sort(as.numeric(freetiles)))
         } else {
             possible_items <- unplaced_camels()
-            if (is.null(tiles[[paste(in_tile)]])) {
-                possible_items <- c(possible_items, TRAPS)
+            # TODO Refactor...
+            #browser()
+            if (is.null(tiles[[in_tile]])) {
+                if (!is_trap(tiles[[paste(as.numeric(in_tile)+1)]])) {
+                    if (!(as.numeric(in_tile) > 1 && is_trap(tiles[[paste(as.numeric(in_tile)-1)]]))) {
+                        possible_items <- c(possible_items, TRAPS)
+                    }
+                }
             }
             updateSelectInput(session, "tileoccupant", 
                               choices=setNames(possible_items, sapply(possible_items, neaten_str)))
@@ -200,27 +204,31 @@ shinyServer(function(input, output, session) {
     })
     
     ########################### MAIN PANEL ####################################
-    output$testout <- renderPrint({
-        tiles_l <- reactiveValuesToList(tiles)
-        tiles_l[paste(seq(NUM_SQUARES))]
-    })
-    
     output$boardstate <- renderGrViz({
         trap_labels <- paste(sapply(1:NUM_SQUARES, function(t) {
             index <- paste0("[", t, "]: ") 
-            contents <- if (!is.null(tiles[[paste(t)]])) {
-                #paste0(' (', paste(tiles[[paste(t)]], collapse=' ,'), ')')
-                # TODO Keep this in or just use colours?
-                paste('')
-            } else ""
-            paste0(index, " '", t, contents, "'")
+            contents <- tiles[[paste(t)]]
+            if (is.null(contents)) {
+                contents_str <- t
+            } else {
+                if (is_trap(contents)) {
+                    if (strsplit(contents, "_")[[1]][1] == 'forward') {
+                        contents_str <- '+'
+                    } else {
+                        contents_str <- '-' 
+                    }
+                } else {
+                    contents_str <- t
+                }
+            }
+            paste0(index, "'", contents_str, "'")
         }), collapse='\n')
         
         camel_labels <- paste(sapply(1:NUM_SQUARES, function(t) {
             index <- paste0("[", t+16, "]: ") 
             contents <- tiles[[paste(t)]]
             if (is.null(contents)) {
-                contents_str <- 'white'
+                contents_str <- 'khaki1'
             } else {
                 if (is_trap(contents)) {
                     if (strsplit(contents, "_")[[1]][1] == 'forward') {
@@ -234,13 +242,18 @@ shinyServer(function(input, output, session) {
                     contents_str <- paste(colours, collapse=':')
                 }
             }
-            # TODO Debugging
             paste0(index, "'", contents_str, "'")
         }), collapse='\n')
         
         full <- paste(raw_diagram, trap_labels, camel_labels, sep='\n')
-
         grViz(full)
+    })
+    
+    output$probsheader <- renderUI({
+        if (is.null(probs()))
+            return ()
+        
+        h3("End game probabilities")
     })
     
     output$probs <- renderTable({

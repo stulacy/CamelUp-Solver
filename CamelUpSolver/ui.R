@@ -1,4 +1,5 @@
 library(shiny)
+library(DiagrammeR)
 
 shinyUI(fluidPage(
   
@@ -20,7 +21,8 @@ shinyUI(fluidPage(
     mainPanel(
        h3("Game board"),
        grVizOutput("boardstate"),
-       verbatimTextOutput("testout"),
+       hr(),
+       uiOutput("probsheader"),
        tableOutput("probs")
     )
   )
