@@ -1,7 +1,9 @@
 library(shiny)
+library(shinyjs)
 library(DiagrammeR)
 
 shinyUI(fluidPage(
+  shinyjs::useShinyjs(),
   titlePanel("CamelUp Solver"),
   
   sidebarLayout(
@@ -15,7 +17,7 @@ shinyUI(fluidPage(
         br(),
         uiOutput("rolleddice"),
         hr(),
-        uiOutput("runbutton")
+        actionButton("run", "Calculate probabilities")
     ),
     
     mainPanel(

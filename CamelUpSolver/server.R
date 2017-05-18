@@ -6,7 +6,7 @@ library(data.table)
 
 NUM_SQUARES <- 16
 MAX_POSSIBLE_SQUARE <- 18
-CAMEL_COLOURS <- c('blue', 'white', 'orange', 'green', 'yellow')
+CAMEL_COLOURS <- c('blue', 'green', 'orange', 'white', 'yellow')
 CAMELS <- paste(CAMEL_COLOURS, 'camel', sep='_')
 TRAPS <- paste(c('forward', 'backward'), 'trap', sep='_')
 N_INNER_SIMS <- 50
@@ -195,13 +195,25 @@ shinyServer(function(input, output, session) {
     })
     
     output$addoccupant <- renderUI({
-        occ <- input$tileoccupant
-        no_occupants <- all(sapply(reactiveValuesToList(tiles), is.null))
-        addbut <- if (is.null(occ) || occ == '') NULL else actionButton("addoccupant", "Add")
-        rstbut <- if (no_occupants) NULL else actionButton("resetbutton", "Reset")
-        
+        addbut <- actionButton("addoccupant", "Add")
+        rstbut <- actionButton("resetbutton", "Reset")
         item_list <- list(addbut, rstbut)
         do.call(tagList, item_list)
+    })
+    
+    observe({
+        occ <- input$tileoccupant
+        no_occupants <- all(sapply(reactiveValuesToList(tiles), is.null))
+        if (is.null(occ) || occ == '') {
+            shinyjs::disable("addoccupant")
+        } else {
+            shinyjs::enable("addoccupant")
+        }
+        if (no_occupants) {
+            shinyjs::disable("resetbutton")
+        } else {
+            shinyjs::enable("resetbutton")
+        }
     })
     
     output$rolleddice <- renderUI({
@@ -209,10 +221,16 @@ shinyServer(function(input, output, session) {
                            choices=CAMEL_COLOURS)
     })
     
+    observe({
+        if (length(unplaced_camels()) > 0) {
+            shinyjs::disable("run")
+        } else {
+            shinyjs::enable("run")
+        }
+    })
     output$runbutton <- renderUI({
         if (length(unplaced_camels()) > 0) return()
         
-        actionButton("run", "Calculate probabilities")
     })
     
     ########################### MAIN PANEL ####################################
