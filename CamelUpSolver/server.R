@@ -9,7 +9,6 @@ CAMELS <- paste(CAMEL_COLOURS, 'camel', sep='_')
 TRAPS <- paste(c('forward', 'backward'), 'trap', sep='_')
 N_SIMS <- 1000
 
-# TODO Don't resize whole diagram when change colour
 # TODO Have stripes running vertically
 # TODO Add reset button
 
@@ -20,72 +19,6 @@ is_camel <- function(x) {
 is_trap <- function(x) {
     !is.null(x) && strsplit(x, "_")[[1]][2] == 'trap'
 }
-
-raw_diagram <- "
-digraph 'camelup'
-{
-    graph [pad='0.75', ranksep='0.25', nodesep='0.25'];
-    node [fontname='FreeSans',fontsize='50',fixedsize=true,shape=square, width=3, height=3, style=striped, fillcolor=khaki1];
-    edge [style=invis];
-    
-    rankdir = 'TB';
-    
-    subgraph cluster_top {
-        style=invis;
-        weight=1;
-        {
-            rank='same';
-            Node_15 [label='@@15', fillcolor='@@31'];
-            Node_16 [label='@@16', fillcolor='@@32'];
-            Node_1 [label='@@1', fillcolor='@@17'];
-            Node_2 [label='@@2', fillcolor='@@18'];
-            Node_3 [label='@@3', fillcolor='@@19'];
-            Node_15 -> Node_16 ;
-            Node_16 -> Node_1 ;
-            Node_1 -> Node_2 ;
-            Node_2 -> Node_3 ;
-        }
-    }
-    subgraph cluster_right {
-        style=invis;
-        Node_4 [label='@@4', fillcolor='@@20']; 
-        Node_5 [label='@@5', fillcolor='@@21']; 
-        Node_6 [label='@@6', fillcolor='@@22'];
-        Node_3 -> Node_4 ;
-        Node_4 -> Node_5 ;
-        Node_5 -> Node_6 ;
-    }
-    subgraph cluster_bottom {
-        style=invis;
-        {
-            rank='same';
-            Node_11 [label='@@11', fillcolor='@@27'];
-            Node_10 [label='@@10', fillcolor='@@26'];
-            Node_9 [label='@@9', fillcolor='@@25'];
-            Node_8 [label='@@8', fillcolor='@@24'];
-            Node_7 [label='@@7', fillcolor='@@23'];
-            
-            Node_11 -> Node_10 [dir='back'];
-            Node_10 -> Node_9 [dir='back'];
-            Node_9 -> Node_8 [dir='back'];
-            Node_8 -> Node_7 [dir='back'];
-            Node_6 -> Node_7 ;
-        }
-    }
-    subgraph cluster_left {
-        style=invis;
-        Node_12 [label='@@12', fillcolor='@@28'];
-        Node_13 [label='@@13', fillcolor='@@29'];
-        Node_14 [label='@@14', fillcolor='@@30'];
-        
-        Node_14 -> Node_13 [dir='back'];
-        Node_13 -> Node_12 [dir='back'];
-        Node_12 -> Node_11 [dir='back'];
-        Node_15 -> Node_14 [dir='back'];
-    }
-    
-}
-"
 
 neaten_str <- function(raw) {
     # Neatens a string of form 'descriptor_type' to 'Descriptor type'
@@ -102,6 +35,33 @@ shinyServer(function(input, output, session) {
     # to represent tile occupants, in the form <type>_<value>, i.e.:
     # 'trap_forward', 'trap_backward', 'camel_blue', 'camel_orange' etc...
     tiles <- reactiveValues()
+    graph <- reactiveValues(nodes=create_node_df(16, label=seq(16),
+                                                pos=c("2, 4!",
+                                                      "3, 4!",
+                                                      "4, 4!",
+                                                      "4, 3!",
+                                                      "4, 2!",
+                                                      "4, 1!",
+                                                      "4, 0!",
+                                                      "3, 0!",
+                                                      "2, 0!",
+                                                      "1, 0!",
+                                                      "0, 0!",
+                                                      "0, 1!",
+                                                      "0, 2!",
+                                                      "0, 3!",
+                                                      "0, 4!",
+                                                      "1, 4!"),
+                                                fontname="FreeSans",
+                                                fontsize="20",
+                                                fontcolor="black",
+                                                fixedsize="true",
+                                                shape="square",
+                                                width="1",
+                                                height="1",
+                                                style="striped",
+                                                fillcolor="khaki1"))
+    
     for (i in seq(NUM_SQUARES)) {
         tiles[[paste(i)]] <- NULL
     }
@@ -117,11 +77,35 @@ shinyServer(function(input, output, session) {
         placed_traps <- names(tile_occupants)[!sapply(tile_occupants, is_trap)]
     })
   
-    
     observeEvent(input$addoccupant, {
         if (input$addoccupant < 1) return()
         
-        tiles[[paste(input$tile)]] <- c(tiles[[paste(input$tile)]], input$tileoccupant)
+        in_tile <- input$tile
+        occupant <- input$tileoccupant
+        
+        # Update display
+        if (is_trap(occupant)) {
+            if (strsplit(occupant, "_")[[1]][1] == 'forward') {
+                colour <- 'lawngreen'
+                lab <- '+'
+            } else {
+                colour <- 'red' 
+                lab <- '-'
+            }
+            graph$nodes[graph$nodes$id == in_tile, 'label'] <- lab
+        }
+        
+        if (is_camel(occupant)) {
+            colour <- gsub("_camel", "", occupant)
+            # If tile already has camel then just append new camel
+            if (!is.null(tiles[[in_tile]])) {
+                colour <- paste(graph$nodes[graph$nodes$id == in_tile, 'fillcolor'], 
+                                colour, sep=':')
+            }
+        }
+        graph$nodes[graph$nodes$id == in_tile, 'fillcolor'] <- colour
+        
+        tiles[[in_tile]] <- c(tiles[[in_tile]], occupant)
     })
     
     probs <- eventReactive(input$run, {
@@ -146,8 +130,6 @@ shinyServer(function(input, output, session) {
     })
     
     ########################### SIDE PANEL ####################################
-    
-    
     output$selecttile <- renderUI({
         selectInput("tile", "Add item to tile...", choices=seq(NUM_SQUARES))
     })
@@ -166,8 +148,6 @@ shinyServer(function(input, output, session) {
                               choices=sort(as.numeric(freetiles)))
         } else {
             possible_items <- unplaced_camels()
-            # TODO Refactor...
-            #browser()
             if (is.null(tiles[[in_tile]])) {
                 if (!is_trap(tiles[[paste(as.numeric(in_tile)+1)]])) {
                     if (!(as.numeric(in_tile) > 1 && is_trap(tiles[[paste(as.numeric(in_tile)-1)]]))) {
@@ -205,48 +185,8 @@ shinyServer(function(input, output, session) {
     
     ########################### MAIN PANEL ####################################
     output$boardstate <- renderGrViz({
-        trap_labels <- paste(sapply(1:NUM_SQUARES, function(t) {
-            index <- paste0("[", t, "]: ") 
-            contents <- tiles[[paste(t)]]
-            if (is.null(contents)) {
-                contents_str <- t
-            } else {
-                if (is_trap(contents)) {
-                    if (strsplit(contents, "_")[[1]][1] == 'forward') {
-                        contents_str <- '+'
-                    } else {
-                        contents_str <- '-' 
-                    }
-                } else {
-                    contents_str <- t
-                }
-            }
-            paste0(index, "'", contents_str, "'")
-        }), collapse='\n')
-        
-        camel_labels <- paste(sapply(1:NUM_SQUARES, function(t) {
-            index <- paste0("[", t+16, "]: ") 
-            contents <- tiles[[paste(t)]]
-            if (is.null(contents)) {
-                contents_str <- 'khaki1'
-            } else {
-                if (is_trap(contents)) {
-                    if (strsplit(contents, "_")[[1]][1] == 'forward') {
-                        contents_str <- 'lawngreen'
-                    } else {
-                        contents_str <- 'red' 
-                    }
-                } else {
-                    # Interesting bit!
-                    colours <- gsub("_camel", "", contents)
-                    contents_str <- paste(colours, collapse=':')
-                }
-            }
-            paste0(index, "'", contents_str, "'")
-        }), collapse='\n')
-        
-        full <- paste(raw_diagram, trap_labels, camel_labels, sep='\n')
-        grViz(full)
+        graph <- create_graph(graph$nodes)
+        render_graph(graph)
     })
     
     output$probsheader <- renderUI({

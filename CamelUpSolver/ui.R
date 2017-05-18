@@ -13,6 +13,7 @@ shinyUI(fluidPage(
         uiOutput("selecttile"),
         uiOutput("selectoccupant"),
         uiOutput("addoccupant"),
+        br(),
         uiOutput("rolleddice"),
         hr(),
         uiOutput("runbutton")
