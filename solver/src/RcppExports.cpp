@@ -6,7 +6,7 @@
 using namespace Rcpp;
 
 // solve
-IntegerMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice, int num_sims);
+NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice, int num_sims);
 RcppExport SEXP solver_solve(SEXP boardstateSEXP, SEXP input_diceSEXP, SEXP num_simsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;

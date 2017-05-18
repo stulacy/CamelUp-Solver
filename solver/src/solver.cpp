@@ -18,9 +18,6 @@ Rcpp::IntegerVector shuffle(Rcpp::IntegerVector a) {
 }
 
 void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerMatrix& results) {
-    //Rcpp::Rcout << "Game state:\n" << boardstate << "\n";
-    //Rcpp::Rcout << "Dice rolled: " << input_dice << "\n";
-    
     // Setup board with camel stacks 
     std::vector<int> camel_positions;
     for (int i=0; i < 5; ++i) {
@@ -105,13 +102,13 @@ void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerM
 }
 
 // [[Rcpp::export]]
-IntegerMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice, int num_sims) {
+NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice, int num_sims) {
     
     IntegerMatrix results(5, 3);
     for (int i = 0; i < num_sims; i++) {
-        //Rcpp::Rcout << "-----------------------------------------------\n ROUND: " << i << "\n--------------------------------------\n";
         simulate_round(boardstate, input_dice, results);
     }
     
-    return results;
+    NumericMatrix foo(results);
+    return foo / num_sims;
 }

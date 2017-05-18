@@ -11,6 +11,7 @@ N_SIMS <- 1000
 TILE_COLOUR <- 'khaki1'
 
 # TODO Have stripes running vertically
+# TODO CIs
 
 is_camel <- function(x) {
     !is.null(x) && strsplit(x, "_")[[1]][2] == 'camel'
@@ -134,8 +135,9 @@ shinyServer(function(input, output, session) {
         
         withProgress({
             res <- solve(gamestate, which(!CAMEL_COLOURS %in% input$rolleddice)-1, N_SIMS)
-            res <- res / N_SIMS * 100
         }, message="Running simulation")
+        print(res)
+        res
     })
     
     ########################### SIDE PANEL ####################################
@@ -212,7 +214,7 @@ shinyServer(function(input, output, session) {
     
     output$probs <- renderTable({
         res <- probs()
-        res <- data.frame(res)
+        res <- data.frame(res * 100)
         res <- cbind(CAMEL_COLOURS, res)
         colnames(res) <- c("Camel", "Leg Win %", "Overall Win %", "Overall Loss %")
         res
