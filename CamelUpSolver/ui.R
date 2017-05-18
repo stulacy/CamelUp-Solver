@@ -2,7 +2,6 @@ library(shiny)
 library(DiagrammeR)
 
 shinyUI(fluidPage(
-  
   titlePanel("CamelUp Solver"),
   
   sidebarLayout(
@@ -24,7 +23,7 @@ shinyUI(fluidPage(
        grVizOutput("boardstate"),
        hr(),
        uiOutput("probsheader"),
-       tableOutput("probs")
+       DT::dataTableOutput("probs")
     )
   )
 ))

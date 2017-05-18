@@ -1,17 +1,19 @@
 library(shiny)
 library(solver)
 library(DiagrammeR)
+library(parallel)
+library(data.table)
 
 NUM_SQUARES <- 16
 MAX_POSSIBLE_SQUARE <- 18
 CAMEL_COLOURS <- c('blue', 'white', 'orange', 'green', 'yellow')
 CAMELS <- paste(CAMEL_COLOURS, 'camel', sep='_')
 TRAPS <- paste(c('forward', 'backward'), 'trap', sep='_')
-N_SIMS <- 1000
+N_INNER_SIMS <- 50
+N_OUTER_SIMS <- 20
 TILE_COLOUR <- 'khaki1'
 
 # TODO Have stripes running vertically
-# TODO CIs
 
 is_camel <- function(x) {
     !is.null(x) && strsplit(x, "_")[[1]][2] == 'camel'
@@ -132,12 +134,26 @@ shinyServer(function(input, output, session) {
             if (length(col_indices) > 0)
                 gamestate[i, col_indices] <- seq_along(col_indices)
         } 
+        dice_rolled <- which(!CAMEL_COLOURS %in% input$rolleddice)-1
         
-        withProgress({
-            res <- solve(gamestate, which(!CAMEL_COLOURS %in% input$rolleddice)-1, N_SIMS)
-        }, message="Running simulation")
-        print(res)
-        res
+        withProgress(message="Running simulation", value=0, max=N_OUTER_SIMS, {
+            res <- lapply(1:N_OUTER_SIMS, function(i) {
+                incProgress(1, message = i)
+                solve(gamestate, dice_rolled, N_INNER_SIMS)
+            })
+            comb_res <- rbindlist(lapply(res, as.data.frame), idcol = "sim")
+            setnames(comb_res, c("sim", "Leg", "Overall win", "Overall loss"))
+            comb_res[, Camel := rep(seq_along(CAMELS), N_OUTER_SIMS)]
+            res_long <- melt(comb_res, id.vars=c("sim", "Camel"))
+            summary <- res_long[, list(mean=mean(value), 
+                                       upper=quantile(value, 0.95),
+                                       lower=quantile(value, 0.05)),
+                                by=list(Camel, variable)]
+            summary[, Camel := CAMEL_COLOURS[Camel]]
+            summary[, output := sprintf("%.2f (%.2f - %.2f)", mean*100, lower*100, upper*100)]
+            summary[, c('mean', 'upper', 'lower') := NULL]
+            dcast(summary, Camel ~ variable, value.var="output")
+        })
     })
     
     ########################### SIDE PANEL ####################################
@@ -212,11 +228,12 @@ shinyServer(function(input, output, session) {
         h3("End game probabilities")
     })
     
-    output$probs <- renderTable({
+    output$probs <- DT::renderDataTable({
         res <- probs()
-        res <- data.frame(res * 100)
-        res <- cbind(CAMEL_COLOURS, res)
+        # TODO Bolden the winners / losers
         colnames(res) <- c("Camel", "Leg Win %", "Overall Win %", "Overall Loss %")
         res
-    })
+        }, options=list(dom='t'
+                        ),
+        rownames=FALSE)
 })
