@@ -9,8 +9,8 @@ MAX_POSSIBLE_SQUARE <- 18
 CAMEL_COLOURS <- c('blue', 'green', 'orange', 'white', 'yellow')
 CAMELS <- paste(CAMEL_COLOURS, 'camel', sep='_')
 TRAPS <- paste(c('forward', 'backward'), 'trap', sep='_')
-N_INNER_SIMS <- 50
-N_OUTER_SIMS <- 20
+N_INNER_SIMS <- 1000
+N_OUTER_SIMS <- 1000
 TILE_COLOUR <- 'khaki1'
 
 # TODO Have stripes running vertically
