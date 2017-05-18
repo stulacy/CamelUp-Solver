@@ -8,9 +8,9 @@ CAMEL_COLOURS <- c('blue', 'white', 'orange', 'green', 'yellow')
 CAMELS <- paste(CAMEL_COLOURS, 'camel', sep='_')
 TRAPS <- paste(c('forward', 'backward'), 'trap', sep='_')
 N_SIMS <- 1000
+TILE_COLOUR <- 'khaki1'
 
 # TODO Have stripes running vertically
-# TODO Add reset button
 
 is_camel <- function(x) {
     !is.null(x) && strsplit(x, "_")[[1]][2] == 'camel'
@@ -60,7 +60,7 @@ shinyServer(function(input, output, session) {
                                                 width="1",
                                                 height="1",
                                                 style="striped",
-                                                fillcolor="khaki1"))
+                                                fillcolor=TILE_COLOUR))
     
     for (i in seq(NUM_SQUARES)) {
         tiles[[paste(i)]] <- NULL
@@ -106,6 +106,15 @@ shinyServer(function(input, output, session) {
         graph$nodes[graph$nodes$id == in_tile, 'fillcolor'] <- colour
         
         tiles[[in_tile]] <- c(tiles[[in_tile]], occupant)
+    })
+    
+    observeEvent(input$resetbutton, {
+        for (i in seq(NUM_SQUARES)) {
+            tiles[[paste(i)]] <- NULL
+        }
+        
+        graph$nodes$label <- seq(NUM_SQUARES)
+        graph$nodes$fillcolor <- TILE_COLOUR
     })
     
     probs <- eventReactive(input$run, {
@@ -168,8 +177,13 @@ shinyServer(function(input, output, session) {
     })
     
     output$addoccupant <- renderUI({
-        if (is.null(input$tileoccupant) || input$tileoccupant == '') return()
-        actionButton("addoccupant", "Add")
+        occ <- input$tileoccupant
+        no_occupants <- all(sapply(reactiveValuesToList(tiles), is.null))
+        addbut <- if (is.null(occ) || occ == '') NULL else actionButton("addoccupant", "Add")
+        rstbut <- if (no_occupants) NULL else actionButton("resetbutton", "Reset")
+        
+        item_list <- list(addbut, rstbut)
+        do.call(tagList, item_list)
     })
     
     output$rolleddice <- renderUI({
