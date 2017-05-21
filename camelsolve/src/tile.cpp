@@ -18,7 +18,6 @@ TileOccupant* Tile::getOccupant(void) {
 int Tile::add_camel_stack(std::vector<int>camels, bool reverse) {
     int ret;
     if (isEmpty()) {
-        //Rcpp::Rcout << "Adding camels to empty tile\n";
         setOccupant(std::unique_ptr<TileOccupant>(new CamelStack(camels)));
         ret = 0;
     } else {

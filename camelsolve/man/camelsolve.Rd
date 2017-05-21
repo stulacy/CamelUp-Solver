@@ -52,3 +52,21 @@ The five rows represent the camels in the same alphabetical order as in the \cod
 Estimates outcome probabilities for the boardgame Camel Up for a given board 
 state using Monte Carlo Simulation.
 }
+\examples{
+library(camelsolve)
+2 camels on both tile 1 and 2 with last one on 3. One backwards trap on tile 4.
+gamestate <- matrix(FALSE, nrow=16, ncol=7)
+gamestate[1, 1] <- 1  # Blue camel on tile 1, bottom of stack
+gamestate[2, 2] <- 1  # Green camel on tile 2, bottom of stack
+gamestate[1, 3] <- 2  # Orange camel on tile 1, on top of blue camel
+amestate[2, 4] <- 2   # Yellow camel on tile 2, on top of green camel
+gamestate[3, 5] <- 1  # White camel on tile 3, alone
+
+gamestate[4, 7] <- 1  # Backwards trap on tile 4
+
+# Only the second dice has been rolled, i.e. the green dice
+dice <- c(1, 3, 4, 5)
+
+camelsolve(gamestate, dice)
+
+}

@@ -44,7 +44,7 @@
 #' The five rows represent the camels in the same alphabetical order as in the \code{boardstate} and
 #' \code{unrolled_dice} parameters.
 #' 
-#' @example
+#' @examples
 #' library(camelsolve)
 #' 2 camels on both tile 1 and 2 with last one on 3. One backwards trap on tile 4.
 #' gamestate <- matrix(FALSE, nrow=16, ncol=7)
