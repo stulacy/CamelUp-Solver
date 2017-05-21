@@ -1,5 +1,5 @@
 library(shiny)
-library(solver)
+library(camelsolve)
 library(DiagrammeR)
 library(parallel)
 library(data.table)
