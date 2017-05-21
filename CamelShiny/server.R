@@ -5,7 +5,6 @@ library(parallel)
 library(data.table)
 
 NUM_SQUARES <- 16
-MAX_POSSIBLE_SQUARE <- 18
 CAMEL_COLOURS <- c('blue', 'green', 'orange', 'white', 'yellow')
 CAMELS <- paste(CAMEL_COLOURS, 'camel', sep='_')
 TRAPS <- paste(c('forward', 'backward'), 'trap', sep='_')
@@ -126,20 +125,20 @@ shinyServer(function(input, output, session) {
         # Game state is represented by binary matrix with 
         # tiles on rows and camels and trips as cols
         cols <- c(CAMELS, TRAPS)
-        gamestate <- matrix(FALSE, nrow=MAX_POSSIBLE_SQUARE, ncol=length(cols))
+        gamestate <- matrix(FALSE, nrow=NUM_SQUARES, ncol=length(cols))
         
-        for (i in seq(MAX_POSSIBLE_SQUARE)) {
+        for (i in seq(NUM_SQUARES)) {
             tile_occupants <- tiles[[paste(i)]]
             col_indices <- sapply(tile_occupants, function(occ) which(cols == occ))
             if (length(col_indices) > 0)
                 gamestate[i, col_indices] <- seq_along(col_indices)
         } 
-        dice_rolled <- which(!CAMEL_COLOURS %in% input$rolleddice)-1
+        dice_rolled <- which(!CAMEL_COLOURS %in% input$rolleddice)
         
         withProgress(message="Running simulation", value=0, max=N_OUTER_SIMS, {
             res <- lapply(1:N_OUTER_SIMS, function(i) {
                 incProgress(1, message = i)
-                solve(gamestate, dice_rolled, N_INNER_SIMS)
+                camelsolve(gamestate, dice_rolled, N_INNER_SIMS)
             })
             comb_res <- rbindlist(lapply(res, as.data.frame), idcol = "sim")
             setnames(comb_res, c("sim", "Leg", "Overall win", "Overall loss"))
