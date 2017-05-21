@@ -248,7 +248,6 @@ shinyServer(function(input, output, session) {
     
     output$probs <- DT::renderDataTable({
         res <- probs()
-        # TODO Bolden the winners / losers
         colnames(res) <- c("Camel", "Leg Win %", "Overall Win %", "Overall Loss %")
         res
         }, options=list(dom='t'
