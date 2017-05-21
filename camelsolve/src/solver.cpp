@@ -131,8 +131,8 @@ void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerM
 //' 
 //' @examples
 //' library(camelsolve)
-//' 2 camels on both tile 1 and 2 with last one on 3. One backwards trap on tile 4.
-//' gamestate <- matrix(FALSE, nrow=16, ncol=7)
+//' # 2 camels on both tile 1 and 2 with last one on 3. One backwards trap on tile 4.
+//' gamestate <- matrix(0, nrow=16, ncol=7)
 //' gamestate[1, 1] <- 1  # Blue camel on tile 1, bottom of stack
 //' gamestate[2, 2] <- 1  # Green camel on tile 2, bottom of stack
 //' gamestate[1, 3] <- 2  # Orange camel on tile 1, on top of blue camel
