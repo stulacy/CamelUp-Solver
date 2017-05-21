@@ -21,17 +21,13 @@ void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerM
     // Setup board with camel stacks 
     std::vector<int> camel_positions;
     for (int i=0; i < 5; ++i) {
-        for (int j=0; j < 16; ++j) {
+        for (int j=0; j < boardstate.nrow(); ++j) {
             if (boardstate(j, i) > 0) {
                 camel_positions.push_back(j);
                 continue;
             }
         }
     }
-    
-    //for (auto it = camel_positions.begin(); it != camel_positions.end(); ++it) {
-    //    Rcpp::Rcout << "Camel is on tile: " << (*it) << "\n";
-    //}
     
     Board board(boardstate);
     bool race_won = false;
@@ -50,32 +46,24 @@ void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerM
         
         leg_num++;
         
-        //Rcpp::Rcout << "\nLEG: " << leg_num << "\n";
-        //Rcpp::Rcout << "Dice stack: " << shuff_dice << "\n";
-        
         while (!dice_stack.empty()) {
-            //Rcpp::Rcout << "\n";
             int rolled_camel = dice_stack.back();
             dice_stack.pop_back();
-            //Rcpp::Rcout << "Dice colour : " << rolled_camel << "\n";
             // get camel tile id from camel_positions
             int camel_position = camel_positions[rolled_camel];
-            //Rcpp::Rcout << "This camel is currently on position: " << camel_position << "\n";
             
             // obtain camelStack associated with this dice
             std::vector<int> new_camels = board.get_camelstack(camel_position, rolled_camel);
             
             int roll = ceil(R::runif(0, 1) * 3);
-            //Rcpp::Rcout << "Dice roll: " << roll << "\n";
             int new_loc = board.move_camels(new_camels, camel_position + roll);
             
             // Update position of camels
             for (auto it = new_camels.begin(); it < new_camels.end(); ++it) {
-                //Rcpp::Rcout << "Updating location for camel " << (*it) << " to " << new_loc << "\n";
                 camel_positions[(*it)] = new_loc;
             }
             
-            race_won = new_loc >= 16;
+            race_won = new_loc > 15;
             if (race_won) {
                 break;
             }
@@ -95,20 +83,79 @@ void simulate_round(IntegerMatrix boardstate, IntegerVector input_dice, IntegerM
     int min_tile =*std::min_element(camel_positions.begin(), camel_positions.end());
     int loser = board.get_camel_from_stack(min_tile, false); 
     results(loser, 2)++;
-    
-    //Rcpp::Rcout << "Race has been won!\n";
-    //Rcpp::Rcout << results;
     return;
 }
 
+//' Estimate camel win probabilities for Camel Up via simulation.
+//' 
+//' Estimates outcome probabilities for the boardgame Camel Up for a given board 
+//' state using Monte Carlo Simulation.
+//' 
+//' @param boardstate A \code{16 x 7} integer matrix representing the current board state.
+//' The rows correspond to the tiles, with the columns representing each of the 5 camels
+//' and the two types of traps. Empty tiles are denoted by 0, while non-empty tiles have a positive
+//' integer. Camel stacks are indicated by ascending numbers, with a value of 1 indicating a camel on
+//' the bottom of the stack, 2 meaning the next highest camel and so on. Traps always have a value of 1.
+//' The order of the 7 columns are as follows:
+//' \enumerate{
+//'     \item{Blue camel}
+//'     \item{Green camel}
+//'     \item{Orange camel}
+//'     \item{Yellow camel}
+//'     \item{White camel}
+//'     \item{Forward trap}
+//'     \item{Backward trap}
+//' }
+//' @param unrolled_dice An integer vector representing the dice that haven't been rolled yet this leg.
+//' Integers map to camels in alphabetical order, i.e.:
+//' \enumerate{
+//'     \item{Blue camel}
+//'     \item{Green camel}
+//'     \item{Orange camel}
+//'     \item{Yellow camel}
+//'     \item{White camel}
+//' }
+//' 
+//' @param num_sims The number of Monte Carlo simulations to run. Defaults to 1000.
+//' @return A \code{5 x 3} matrix of floats representing the probabilities of 3 outcomes 
+//' for the 5 camels. The 3 columns represent the following outcomes in order:
+//' 
+//' \enumerate{
+//'     \item{Leg winner}
+//'     \item{Overall winner}
+//'     \item{Overall loser }
+//' }
+//' 
+//' The five rows represent the camels in the same alphabetical order as in the \code{boardstate} and
+//' \code{unrolled_dice} parameters.
+//' 
+//' @example
+//' library(camelsolve)
+//' 2 camels on both tile 1 and 2 with last one on 3. One backwards trap on tile 4.
+//' gamestate <- matrix(FALSE, nrow=16, ncol=7)
+//' gamestate[1, 1] <- 1  # Blue camel on tile 1, bottom of stack
+//' gamestate[2, 2] <- 1  # Green camel on tile 2, bottom of stack
+//' gamestate[1, 3] <- 2  # Orange camel on tile 1, on top of blue camel
+//' amestate[2, 4] <- 2   # Yellow camel on tile 2, on top of green camel
+//' gamestate[3, 5] <- 1  # White camel on tile 3, alone
+//' 
+//' gamestate[4, 7] <- 1  # Backwards trap on tile 4
+//' 
+//' # Only the second dice has been rolled, i.e. the green dice
+//' dice <- c(1, 3, 4, 5)
+//' 
+//' camelsolve(gamestate, dice)
+//' 
 // [[Rcpp::export]]
-NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice, int num_sims) {
+NumericMatrix camelsolve(IntegerMatrix boardstate, IntegerVector unrolled_dice, int num_sims=1000) {
     
-    IntegerMatrix results(5, 3);
+    IntegerVector dice_0index = unrolled_dice - 1;
+    IntegerMatrix win_numbers(5, 3);
+    
     for (int i = 0; i < num_sims; i++) {
-        simulate_round(boardstate, input_dice, results);
+        simulate_round(boardstate, dice_0index, win_numbers);
     }
     
-    NumericMatrix foo(results);
-    return foo / num_sims;
+    NumericMatrix win_proportion(win_numbers);
+    return win_proportion / num_sims;
 }

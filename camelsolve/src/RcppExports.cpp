@@ -5,16 +5,16 @@
 
 using namespace Rcpp;
 
-// solve
-NumericMatrix solve(IntegerMatrix boardstate, IntegerVector input_dice, int num_sims);
-RcppExport SEXP solver_solve(SEXP boardstateSEXP, SEXP input_diceSEXP, SEXP num_simsSEXP) {
+// camelsolve
+NumericMatrix camelsolve(IntegerMatrix boardstate, IntegerVector unrolled_dice, int num_sims);
+RcppExport SEXP camelsolve_camelsolve(SEXP boardstateSEXP, SEXP unrolled_diceSEXP, SEXP num_simsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerMatrix >::type boardstate(boardstateSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type input_dice(input_diceSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type unrolled_dice(unrolled_diceSEXP);
     Rcpp::traits::input_parameter< int >::type num_sims(num_simsSEXP);
-    rcpp_result_gen = Rcpp::wrap(solve(boardstate, input_dice, num_sims));
+    rcpp_result_gen = Rcpp::wrap(camelsolve(boardstate, unrolled_dice, num_sims));
     return rcpp_result_gen;
 END_RCPP
 }
