@@ -7,6 +7,5 @@ std::string ForwardTrap::getName() {
 }
         
 int ForwardTrap::add_cam_stack(std::vector<int> camels, bool reverse) {
-    //Rcpp::Rcout << "Hit forward trap\n";
     return 1;
 }
